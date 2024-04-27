@@ -6,7 +6,7 @@ import datetime
 import secrets
 
 COUNT_GEN = {}
-TIME_GENERATE_TOKEN_IN_HOUR = [12, 15, 20]
+TIME_GENERATE_TOKEN_IN_HOUR = [12]
 for i in TIME_GENERATE_TOKEN_IN_HOUR:
     COUNT_GEN[i] = True
 
@@ -43,12 +43,8 @@ class TokenGenerateView(APIView):
             return serializer.data
 
         except Token.DoesNotExist:
-            # Генерация нового токена
-            if now.hour in TIME_GENERATE_TOKEN_IN_HOUR:
-                token_value = secrets.token_hex(32)
-                token = Token.objects.create(value=token_value)
-                token.save()
-                serializer = TokenSerializer(token)
-                COUNT_GEN += 1
-                return serializer.data
-            return 0
+            token = Token.objects.create(value="superpuperinittoken")
+            token.save()
+            serializer = TokenSerializer(token)
+            COUNT_GEN += 1
+            return serializer.data
