@@ -22,7 +22,9 @@ class TokenGenerateView(APIView):
 
     def generate_token(self):
         now = datetime.datetime.now()
-        if now.hour in TIME_GENERATE_TOKEN_IN_HOUR:
+        latest_token = Token.objects.latest('id')
+
+        if now.hour in TIME_GENERATE_TOKEN_IN_HOUR and latest_token.created_at.day != now.day:
             # Генерация нового токена
             token_value = secrets.token_hex(32)
             token = Token.objects.create(value=token_value)
