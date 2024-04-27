@@ -6,8 +6,13 @@ import datetime
 import secrets
 
 
-TIME_GENERATE_TOKEN_IN_HOUR = [12, 15, 20]
-
+TIME_GENERATE_TOKEN_IN_HOUR = [12, 13,  15, 20]
+COUNT_GEN = {
+    12: True,
+    13: True,
+    15: True,
+    20: True
+}
 
 class CheckOnlineView(APIView):
     def get(self, request):
@@ -22,10 +27,17 @@ class TokenGenerateView(APIView):
 
     def generate_token(self):
         now = datetime.datetime.now()
+        global COUNT_GEN
         try:
             latest_token = Token.objects.latest('id')
-            if now.hour in TIME_GENERATE_TOKEN_IN_HOUR and latest_token.created_at.day != now.day:
+            if latest_token.created_at.day != now.day:
+                COUNT_GEN[12] = True
+                COUNT_GEN[15] = True
+                COUNT_GEN[20] = True
+
+            if now.hour in TIME_GENERATE_TOKEN_IN_HOUR and COUNT_GEN[now.hour]:
                 # Генерация нового токена
+                COUNT_GEN[now.hour] = False
                 token_value = secrets.token_hex(32)
                 token = Token.objects.create(value=token_value)
                 token.save()
@@ -41,5 +53,6 @@ class TokenGenerateView(APIView):
                 token = Token.objects.create(value=token_value)
                 token.save()
                 serializer = TokenSerializer(token)
+                COUNT_GEN += 1
                 return serializer.data
             return 0
