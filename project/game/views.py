@@ -22,14 +22,24 @@ class TokenGenerateView(APIView):
 
     def generate_token(self):
         now = datetime.datetime.now()
-        latest_token = Token.objects.latest('id')
+        try:
+            latest_token = Token.objects.latest('id')
+            if now.hour in TIME_GENERATE_TOKEN_IN_HOUR and latest_token.created_at.day != now.day:
+                # Генерация нового токена
+                token_value = secrets.token_hex(32)
+                token = Token.objects.create(value=token_value)
+                token.save()
+            latest_token = Token.objects.latest('id')
+            serializer = TokenSerializer(latest_token)
 
-        if now.hour in TIME_GENERATE_TOKEN_IN_HOUR and latest_token.created_at.day != now.day:
+            return serializer.data
+
+        except Token.DoesNotExist:
             # Генерация нового токена
-            token_value = secrets.token_hex(32)
-            token = Token.objects.create(value=token_value)
-            token.save()
-        latest_token = Token.objects.latest('id')
-        serializer = TokenSerializer(latest_token)
-        print(serializer.data)
-        return serializer.data
+            if now.hour in TIME_GENERATE_TOKEN_IN_HOUR:
+                token_value = secrets.token_hex(32)
+                token = Token.objects.create(value=token_value)
+                token.save()
+                serializer = TokenSerializer(token)
+                return serializer.data
+            return 0
