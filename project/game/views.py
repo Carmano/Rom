@@ -5,14 +5,11 @@ from .serializers import TokenSerializer
 import datetime
 import secrets
 
+COUNT_GEN = {}
+TIME_GENERATE_TOKEN_IN_HOUR = [12, 15, 20]
+for i in TIME_GENERATE_TOKEN_IN_HOUR:
+    COUNT_GEN[i] = True
 
-TIME_GENERATE_TOKEN_IN_HOUR = [12, 13,  15, 20]
-COUNT_GEN = {
-    12: True,
-    13: True,
-    15: True,
-    20: True
-}
 
 class CheckOnlineView(APIView):
     def get(self, request):
@@ -31,9 +28,8 @@ class TokenGenerateView(APIView):
         try:
             latest_token = Token.objects.latest('id')
             if latest_token.created_at.day != now.day:
-                COUNT_GEN[12] = True
-                COUNT_GEN[15] = True
-                COUNT_GEN[20] = True
+                for key, val in COUNT_GEN.items():
+                    COUNT_GEN[key] = True
 
             if now.hour in TIME_GENERATE_TOKEN_IN_HOUR and COUNT_GEN[now.hour]:
                 # Генерация нового токена
